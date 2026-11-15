@@ -1,0 +1,73 @@
+@page "{examId:int}"
+@model OES.WEB.Pages.Admin.Exams.Questions.IndexModel
+@using OES.MODELS.Examinations
+@{
+	ViewData["Title"] = "Exam questions";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+	<div>
+		<h1>Questions</h1>
+		<p class="text-muted mb-0">@Model.Exam?.Title</p>
+	</div>
+	@if (Model.Exam?.Status == ExamStatuses.Draft && Model.Exam.IsActive)
+	{
+		<a asp-page="Create" asp-route-examId="@Model.Exam.Id" class="btn btn-primary">Add question</a>
+	}
+</div>
+
+@if (Model.Questions.Count == 0)
+{
+	<div class="alert alert-info">No questions have been added to this exam.</div>
+}
+else
+{
+	<div class="table-responsive">
+		<table class="table table-striped align-middle">
+			<thead>
+				<tr>
+					<th>#</th>
+					<th>Question</th>
+					<th>Options</th>
+					<th>Marks</th>
+					<th class="text-end">Actions</th>
+				</tr>
+			</thead>
+			<tbody>
+			@foreach (var question in Model.Questions)
+			{
+				<tr>
+					<td>@question.DisplayOrder</td>
+					<td>@question.QuestionText</td>
+					<td>
+						@foreach (var option in question.Options)
+						{
+							<div class="@(option.IsCorrect ? "fw-bold text-success" : string.Empty)">
+								@option.OptionKey. @option.OptionText
+								@if (option.IsCorrect)
+								{
+									<span>(correct)</span>
+								}
+							</div>
+						}
+					</td>
+					<td>@question.Marks</td>
+					<td class="text-end">
+						@if (Model.Exam?.Status == ExamStatuses.Draft && Model.Exam.IsActive)
+						{
+							<a asp-page="Edit" asp-route-examId="@question.ExamId" asp-route-id="@question.Id" class="btn btn-sm btn-outline-primary">Edit</a>
+							<form method="post" asp-page-handler="Delete" class="d-inline">
+								<input type="hidden" name="examId" value="@question.ExamId" />
+								<input type="hidden" name="id" value="@question.Id" />
+								<button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+							</form>
+						}
+					</td>
+				</tr>
+			}
+			</tbody>
+		</table>
+	</div>
+}
+
+<a asp-page="/Admin/Exams/Details" asp-route-id="@Model.Exam?.Id" class="btn btn-link">Back to exam</a>

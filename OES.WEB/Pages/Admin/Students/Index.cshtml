@@ -1,0 +1,55 @@
+@page
+@model OES.WEB.Pages.Admin.Students.IndexModel
+@{
+	ViewData["Title"] = "Students";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+	<h1>Students</h1>
+	<span class="text-muted">@Model.Students.Count student(s)</span>
+</div>
+
+@if (Model.Students.Count == 0)
+{
+	<div class="alert alert-info">No students have registered yet.</div>
+}
+else
+{
+	<div class="table-responsive">
+		<table class="table table-striped align-middle">
+			<thead>
+				<tr>
+					<th>Full name</th>
+					<th>Email</th>
+					<th>Registered</th>
+					<th>Status</th>
+					<th class="text-end">Action</th>
+				</tr>
+			</thead>
+			<tbody>
+			@foreach (var student in Model.Students)
+			{
+				<tr>
+					<td>@student.FullName</td>
+					<td>@student.Email</td>
+					<td>@student.CreatedUtc.ToLocalTime().ToString("g")</td>
+					<td>
+						<span class="badge @(student.IsActive ? "text-bg-success" : "text-bg-secondary")">
+							@(student.IsActive ? "Active" : "Inactive")
+						</span>
+					</td>
+					<td class="text-end">
+						<form method="post" asp-page-handler="Status" class="d-inline">
+							<input type="hidden" name="userId" value="@student.UserId" />
+							<input type="hidden" name="isActive" value="@(!student.IsActive)" />
+							<button type="submit" class="btn btn-sm @(student.IsActive ? "btn-outline-danger" : "btn-outline-success")">
+								@(student.IsActive ? "Deactivate" : "Activate")
+							</button>
+						</form>
+					</td>
+				</tr>
+			}
+			</tbody>
+		</table>
+	</div>
+}

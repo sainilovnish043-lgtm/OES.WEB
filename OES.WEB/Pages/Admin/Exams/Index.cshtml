@@ -1,0 +1,75 @@
+@page
+@model OES.WEB.Pages.Admin.Exams.IndexModel
+@using OES.MODELS.Examinations
+@{
+	ViewData["Title"] = "Examinations";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+	<h1>Examinations</h1>
+	<a asp-page="Create" class="btn btn-primary">Create exam</a>
+</div>
+
+@if (Model.Exams.Count == 0)
+{
+	<div class="alert alert-info">No examinations have been created yet.</div>
+}
+else
+{
+	<div class="table-responsive">
+		<table class="table table-striped align-middle">
+			<thead>
+				<tr>
+					<th>Title</th>
+					<th>Schedule</th>
+					<th>Duration</th>
+					<th>Marks</th>
+					<th>Status</th>
+					<th class="text-end">Actions</th>
+				</tr>
+			</thead>
+			<tbody>
+			@foreach (var exam in Model.Exams)
+			{
+				<tr>
+					<td>
+						<a asp-page="Details" asp-route-id="@exam.Id">@exam.Title</a>
+					</td>
+					<td>@exam.StartUtc.ToLocalTime().ToString("g") - @exam.EndUtc.ToLocalTime().ToString("g")</td>
+					<td>@exam.DurationMinutes min</td>
+					<td>@exam.PassingMarks / @exam.TotalMarks</td>
+					<td>
+						<span class="badge @(exam.Status == ExamStatuses.Published ? "text-bg-success" : exam.Status == ExamStatuses.Cancelled ? "text-bg-danger" : "text-bg-secondary")">
+							@exam.Status
+						</span>
+					</td>
+					<td class="text-end">
+						@if (exam.Status == ExamStatuses.Draft && exam.IsActive)
+						{
+							<a asp-page="Edit" asp-route-id="@exam.Id" class="btn btn-sm btn-outline-primary">Edit</a>
+							<form method="post" asp-page-handler="Publish" class="d-inline">
+								<input type="hidden" name="id" value="@exam.Id" />
+								<button type="submit" class="btn btn-sm btn-outline-success">Publish</button>
+							</form>
+						}
+						else if (exam.Status == ExamStatuses.Published && exam.IsActive)
+						{
+							<form method="post" asp-page-handler="Unpublish" class="d-inline">
+								<input type="hidden" name="id" value="@exam.Id" />
+								<button type="submit" class="btn btn-sm btn-outline-warning">Unpublish</button>
+							</form>
+						}
+						@if (exam.IsActive)
+						{
+							<form method="post" asp-page-handler="Deactivate" class="d-inline">
+								<input type="hidden" name="id" value="@exam.Id" />
+								<button type="submit" class="btn btn-sm btn-outline-danger">Deactivate</button>
+							</form>
+						}
+					</td>
+				</tr>
+			}
+			</tbody>
+		</table>
+	</div>
+}

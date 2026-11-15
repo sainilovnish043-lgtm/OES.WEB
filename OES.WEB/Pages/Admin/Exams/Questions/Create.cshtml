@@ -1,0 +1,53 @@
+@page "{examId:int}"
+@model OES.WEB.Pages.Admin.Exams.Questions.CreateModel
+@{
+	ViewData["Title"] = "Add question";
+}
+
+<h1>Add question</h1>
+<p class="text-muted">Exam: @Model.Exam?.Title</p>
+
+<form method="post">
+	<div asp-validation-summary="ModelOnly" class="text-danger"></div>
+	<div class="mb-3">
+		<label asp-for="Input.QuestionText" class="form-label"></label>
+		<textarea asp-for="Input.QuestionText" class="form-control" rows="4"></textarea>
+		<span asp-validation-for="Input.QuestionText" class="text-danger"></span>
+	</div>
+	<div class="row">
+		<div class="col-md-6 mb-3">
+			<label asp-for="Input.Marks" class="form-label"></label>
+			<input asp-for="Input.Marks" class="form-control" />
+			<span asp-validation-for="Input.Marks" class="text-danger"></span>
+		</div>
+		<div class="col-md-6 mb-3">
+			<label asp-for="Input.NegativeMarks" class="form-label"></label>
+			<input asp-for="Input.NegativeMarks" class="form-control" />
+			<span asp-validation-for="Input.NegativeMarks" class="text-danger"></span>
+		</div>
+	</div>
+
+	<h2 class="h5">Options</h2>
+	<p class="text-muted">Enter 2 to 6 options and select exactly one correct answer.</p>
+	@for (var index = 0; index < Model.Input.Options.Count; index++)
+	{
+		<div class="row align-items-center mb-2">
+			<div class="col-auto"><strong>@((char)('A' + index))</strong></div>
+			<div class="col">
+				<input asp-for="Input.Options[index].OptionText" class="form-control" placeholder="Option text" />
+				<span asp-validation-for="Input.Options[index].OptionText" class="text-danger"></span>
+			</div>
+			<div class="col-auto form-check">
+				<input asp-for="Input.Options[index].IsCorrect" class="form-check-input" />
+				<label asp-for="Input.Options[index].IsCorrect" class="form-check-label">Correct</label>
+			</div>
+		</div>
+	}
+
+	<button type="submit" class="btn btn-primary">Save question</button>
+	<a asp-page="Index" asp-route-examId="@Model.Exam?.Id" class="btn btn-link">Cancel</a>
+</form>
+
+@section Scripts {
+	<partial name="_ValidationScriptsPartial" />
+}
