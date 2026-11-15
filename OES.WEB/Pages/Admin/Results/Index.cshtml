@@ -1,0 +1,68 @@
+@page
+@model OES.WEB.Pages.Admin.Results.IndexModel
+@using OES.MODELS.Examinations
+@{
+	ViewData["Title"] = "Results";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+	<h1>Results</h1>
+	<span class="text-muted">@Model.Results.Count result(s)</span>
+</div>
+
+<form method="get" class="row g-2 mb-3">
+	<div class="col-md-5">
+		<label for="examId" class="form-label">Filter by exam</label>
+		<select id="examId" name="examId" class="form-select">
+			<option value="">All exams</option>
+			@foreach (var exam in Model.Exams)
+			{
+				<option value="@exam.Id" selected="@(Model.SelectedExamId == exam.Id ? "selected" : null)">@exam.Title</option>
+			}
+		</select>
+	</div>
+	<div class="col-md-auto align-self-end">
+		<button type="submit" class="btn btn-primary">Filter</button>
+	</div>
+</form>
+
+@if (Model.Results.Count == 0)
+{
+	<div class="alert alert-info">No results are available for the selected filter.</div>
+}
+else
+{
+	<div class="table-responsive">
+		<table class="table table-striped align-middle">
+			<thead>
+				<tr>
+					<th>Student</th>
+					<th>Exam</th>
+					<th>Marks</th>
+					<th>Percentage</th>
+					<th>Correct</th>
+					<th>Wrong</th>
+					<th>Unanswered</th>
+					<th>Status</th>
+					<th>Date</th>
+				</tr>
+			</thead>
+			<tbody>
+			@foreach (var result in Model.Results)
+			{
+				<tr>
+					<td>@result.StudentName</td>
+					<td>@result.ExamTitle</td>
+					<td>@result.ObtainedMarks / @result.TotalMarks</td>
+					<td>@result.Percentage.ToString("0.##")%</td>
+					<td>@result.CorrectAnswers</td>
+					<td>@result.WrongAnswers</td>
+					<td>@result.UnansweredQuestions</td>
+					<td><span class="badge @(result.Status == ResultStatuses.Pass ? "text-bg-success" : "text-bg-danger")">@result.Status</span></td>
+					<td>@result.GeneratedUtc.ToLocalTime().ToString("g")</td>
+				</tr>
+			}
+			</tbody>
+		</table>
+	</div>
+}

@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="OES.DATA/OES.DATA.csproj" />
+  <Project Path="OES.MODELS/OES.MODELS.csproj" />
+  <Project Path="OES.SERVICES/OES.SERVICES.csproj" />
+  <Project Path="OES.TESTS/OES.TESTS.csproj" />
+  <Project Path="OES.WEB/OES.WEB.csproj" />
+</Solution>

@@ -1,0 +1,32 @@
+@page "{id:int}"
+@model OES.WEB.Pages.Student.Results.DetailsModel
+@using OES.MODELS.Examinations
+@{
+	ViewData["Title"] = "Result details";
+}
+
+@if (Model.Result is not null)
+{
+	<div class="d-flex justify-content-between align-items-center mb-3">
+		<h1>@Model.Result.ExamTitle</h1>
+		<span class="badge fs-6 @(Model.Result.Status == ResultStatuses.Pass ? "text-bg-success" : "text-bg-danger")">@Model.Result.Status</span>
+	</div>
+	<dl class="row">
+		<dt class="col-sm-4">Obtained marks</dt>
+		<dd class="col-sm-8">@Model.Result.ObtainedMarks / @Model.Result.TotalMarks</dd>
+		<dt class="col-sm-4">Passing marks</dt>
+		<dd class="col-sm-8">@Model.Result.PassingMarks</dd>
+		<dt class="col-sm-4">Percentage</dt>
+		<dd class="col-sm-8">@Model.Result.Percentage.ToString("0.##")%</dd>
+		<dt class="col-sm-4">Correct answers</dt>
+		<dd class="col-sm-8">@Model.Result.CorrectAnswers</dd>
+		<dt class="col-sm-4">Wrong answers</dt>
+		<dd class="col-sm-8">@Model.Result.WrongAnswers</dd>
+		<dt class="col-sm-4">Unanswered questions</dt>
+		<dd class="col-sm-8">@Model.Result.UnansweredQuestions</dd>
+		<dt class="col-sm-4">Generated</dt>
+		<dd class="col-sm-8">@Model.Result.GeneratedUtc.ToLocalTime().ToString("f")</dd>
+	</dl>
+}
+
+<a asp-page="Index" class="btn btn-link">Back to results</a>

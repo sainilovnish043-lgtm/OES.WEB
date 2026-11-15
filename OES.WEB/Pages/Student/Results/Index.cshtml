@@ -1,0 +1,43 @@
+@page
+@model OES.WEB.Pages.Student.Results.IndexModel
+@using OES.MODELS.Examinations
+@{
+	ViewData["Title"] = "My results";
+}
+
+<h1>My results</h1>
+
+@if (Model.Results.Count == 0)
+{
+	<div class="alert alert-info">No results are available yet.</div>
+}
+else
+{
+	<div class="table-responsive">
+		<table class="table table-striped align-middle">
+			<thead>
+				<tr>
+					<th>Exam</th>
+					<th>Marks</th>
+					<th>Percentage</th>
+					<th>Status</th>
+					<th>Date</th>
+					<th></th>
+				</tr>
+			</thead>
+			<tbody>
+			@foreach (var result in Model.Results)
+			{
+				<tr>
+					<td>@result.ExamTitle</td>
+					<td>@result.ObtainedMarks / @result.TotalMarks</td>
+					<td>@result.Percentage.ToString("0.##")%</td>
+					<td><span class="badge @(result.Status == ResultStatuses.Pass ? "text-bg-success" : "text-bg-danger")">@result.Status</span></td>
+					<td>@result.GeneratedUtc.ToLocalTime().ToString("g")</td>
+					<td><a asp-page="Details" asp-route-id="@result.Id" class="btn btn-sm btn-outline-primary">Details</a></td>
+				</tr>
+			}
+			</tbody>
+		</table>
+	</div>
+}

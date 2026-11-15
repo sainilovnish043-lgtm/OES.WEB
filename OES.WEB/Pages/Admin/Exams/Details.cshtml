@@ -1,0 +1,32 @@
+@page "{id:int}"
+@model OES.WEB.Pages.Admin.Exams.DetailsModel
+@{
+	ViewData["Title"] = "Exam details";
+}
+
+@if (Model.Exam is not null)
+{
+	<div class="d-flex justify-content-between align-items-center mb-3">
+		<h1>@Model.Exam.Title</h1>
+		@if (Model.Exam.Status == OES.MODELS.Examinations.ExamStatuses.Draft && Model.Exam.IsActive)
+		{
+			<a asp-page="Edit" asp-route-id="@Model.Exam.Id" class="btn btn-primary">Edit</a>
+			<a asp-page="Questions/Index" asp-route-examId="@Model.Exam.Id" class="btn btn-outline-primary">Manage questions</a>
+		}
+	</div>
+	<p>@Model.Exam.Description</p>
+	<dl class="row">
+		<dt class="col-sm-3">Status</dt>
+		<dd class="col-sm-9">@Model.Exam.Status</dd>
+		<dt class="col-sm-3">Start</dt>
+		<dd class="col-sm-9">@Model.Exam.StartUtc.ToLocalTime().ToString("f")</dd>
+		<dt class="col-sm-3">End</dt>
+		<dd class="col-sm-9">@Model.Exam.EndUtc.ToLocalTime().ToString("f")</dd>
+		<dt class="col-sm-3">Duration</dt>
+		<dd class="col-sm-9">@Model.Exam.DurationMinutes minutes</dd>
+		<dt class="col-sm-3">Marks</dt>
+		<dd class="col-sm-9">@Model.Exam.PassingMarks / @Model.Exam.TotalMarks</dd>
+	</dl>
+}
+
+<a asp-page="Index" class="btn btn-link">Back to exams</a>

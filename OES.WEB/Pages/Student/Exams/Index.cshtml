@@ -1,0 +1,53 @@
+@page
+@model OES.WEB.Pages.Student.Exams.IndexModel
+@{
+	ViewData["Title"] = "Available exams";
+}
+
+<h1>Available exams</h1>
+
+@if (TempData["ErrorMessage"] is string errorMessage)
+{
+	<div class="alert alert-danger">@errorMessage</div>
+}
+
+@if (Model.Exams.Count == 0)
+{
+	<div class="alert alert-info">There are no exams available at this time.</div>
+}
+else
+{
+	<div class="table-responsive">
+		<table class="table table-striped align-middle">
+			<thead>
+				<tr>
+					<th>Exam</th>
+					<th>Schedule</th>
+					<th>Duration</th>
+					<th>Total marks</th>
+					<th></th>
+				</tr>
+			</thead>
+			<tbody>
+			@foreach (var exam in Model.Exams)
+			{
+				<tr>
+					<td>
+						<strong>@exam.Title</strong>
+						<div class="text-muted">@exam.Description</div>
+					</td>
+					<td>@exam.StartUtc.ToLocalTime().ToString("g") - @exam.EndUtc.ToLocalTime().ToString("g")</td>
+					<td>@exam.DurationMinutes minutes</td>
+					<td>@exam.TotalMarks</td>
+					<td class="text-end">
+						<form method="post" asp-page-handler="Start">
+							<input type="hidden" name="examId" value="@exam.Id" />
+							<button type="submit" class="btn btn-primary">Start exam</button>
+						</form>
+					</td>
+				</tr>
+			}
+			</tbody>
+		</table>
+	</div>
+}

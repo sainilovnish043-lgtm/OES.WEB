@@ -1,0 +1,56 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = User.IsInRole("Admin") ? "Administration dashboard" : User.IsInRole("Student") ? "Student dashboard" : "Welcome";
+}
+
+@if (User.IsInRole("Admin"))
+{
+    <div class="page-heading">
+        <div>
+            <h1>Good to see you, @User.Identity?.Name</h1>
+            <p>Manage your examinations, students, and results from one place.</p>
+        </div>
+        <a class="btn btn-primary" asp-page="/Admin/Exams/Index">Manage examinations</a>
+    </div>
+    <div class="row g-3 mb-4">
+        <div class="col-md-4"><div class="card h-100 p-3"><div class="text-muted small">Examination workspace</div><h3 class="mt-2 mb-1">Create and publish</h3><p class="mb-0 text-muted">Build exams, add questions, and control availability.</p></div></div>
+        <div class="col-md-4"><div class="card h-100 p-3"><div class="text-muted small">Student records</div><h3 class="mt-2 mb-1">Keep learners moving</h3><p class="mb-0 text-muted">Review registered students and their activity.</p></div></div>
+        <div class="col-md-4"><div class="card h-100 p-3"><div class="text-muted small">Performance</div><h3 class="mt-2 mb-1">Review results</h3><p class="mb-0 text-muted">Access completed attempts and reports.</p></div></div>
+    </div>
+    <div class="card p-4">
+        <h2 class="h5">Quick actions</h2>
+        <div class="d-flex flex-wrap gap-2 mt-3">
+            <a class="btn btn-outline-primary" asp-page="/Admin/Exams/Index">Examinations</a>
+            <a class="btn btn-outline-primary" asp-page="/Admin/Students/Index">Students</a>
+            <a class="btn btn-outline-primary" asp-page="/Admin/Results/Index">Results</a>
+        </div>
+    </div>
+}
+else if (User.IsInRole("Student"))
+{
+    <div class="page-heading">
+        <div>
+            <h1>Welcome back, @User.Identity?.Name</h1>
+            <p>Stay on top of your examinations and results.</p>
+        </div>
+        <a class="btn btn-primary" asp-page="/Student/Exams/Index">Browse exams</a>
+    </div>
+    <div class="row g-3">
+        <div class="col-md-6"><div class="card h-100 p-4"><div class="text-muted small">Next step</div><h2 class="h4 mt-2">Find an examination</h2><p class="text-muted">View the exams currently available to you and start when ready.</p><a asp-page="/Student/Exams/Index">View available exams &rarr;</a></div></div>
+        <div class="col-md-6"><div class="card h-100 p-4"><div class="text-muted small">Your progress</div><h2 class="h4 mt-2">Review your results</h2><p class="text-muted">See scores and completed attempts after submission.</p><a asp-page="/Student/Results/Index">Open my results &rarr;</a></div></div>
+    </div>
+}
+else
+{
+    <div class="card p-5 text-center" style="max-width: 680px; margin: 8vh auto;">
+        <span class="brand-mark mx-auto mb-3">E</span>
+        <h1 class="display-4">ExamDesk</h1>
+        <p class="lead text-muted">A focused online examination and result management portal.</p>
+        <div class="d-flex justify-content-center gap-2 mt-3">
+            <a class="btn btn-primary" asp-page="/Account/Login">Sign in</a>
+            <a class="btn btn-outline-primary" asp-page="/Account/Register">Create an account</a>
+        </div>
+    </div>
+}
+</div>

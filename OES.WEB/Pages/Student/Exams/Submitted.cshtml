@@ -1,0 +1,19 @@
+@page
+@model OES.WEB.Pages.Student.Exams.SubmittedModel
+@using OES.MODELS.Examinations
+@{
+	ViewData["Title"] = "Exam submitted";
+}
+
+@if (Model.Status == AttemptStatuses.TimedOut)
+{
+	<h1>Time expired</h1>
+	<div class="alert alert-warning">The exam time expired. Your submitted answers were saved.</div>
+}
+else
+{
+	<h1>Exam submitted</h1>
+	<div class="alert alert-success">Your exam answers were submitted successfully.</div>
+}
+
+<a asp-page="Index" class="btn btn-primary">Back to available exams</a>
