@@ -8,11 +8,14 @@
 {
 	<div class="d-flex justify-content-between align-items-center mb-3">
 		<h1>@Model.Exam.Title</h1>
-		@if (Model.Exam.Status == OES.MODELS.Examinations.ExamStatuses.Draft && Model.Exam.IsActive)
-		{
-			<a asp-page="Edit" asp-route-id="@Model.Exam.Id" class="btn btn-primary">Edit</a>
-			<a asp-page="Questions/Index" asp-route-examId="@Model.Exam.Id" class="btn btn-outline-primary">Manage questions</a>
-		}
+		<div class="d-flex gap-2">
+			@if (Model.Exam.Status == OES.MODELS.Examinations.ExamStatuses.Draft && Model.Exam.IsActive)
+			{
+				<a asp-page="Edit" asp-route-id="@Model.Exam.Id" class="btn btn-primary">Edit</a>
+				<a asp-page="Questions/Index" asp-route-examId="@Model.Exam.Id" class="btn btn-outline-primary">Manage questions</a>
+			}
+			<a asp-page="/Admin/Results/Index" asp-route-examId="@Model.Exam.Id" class="btn btn-outline-success">View Results & GridView</a>
+		</div>
 	</div>
 	<p>@Model.Exam.Description</p>
 	<dl class="row">

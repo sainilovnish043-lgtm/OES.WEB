@@ -6,80 +6,66 @@ namespace OES.DATA.Examinations;
 
 public sealed class ResultRepository(ISqlConnectionFactory connectionFactory) : IResultRepository
 {
-    private const string SelectSql = """
-        SELECT r.Id, r.AttemptId, r.ExamId, r.StudentId,
-               e.Title AS ExamTitle, s.FullName AS StudentName,
-               r.TotalQuestions, r.CorrectAnswers, r.WrongAnswers,
-               r.UnansweredQuestions, r.TotalMarks, r.ObtainedMarks,
-               r.Percentage, r.PassingMarks, r.Status, r.GeneratedUtc
-        FROM dbo.Results AS r
-        INNER JOIN dbo.Exams AS e ON e.Id = r.ExamId
-        INNER JOIN dbo.Students AS s ON s.Id = r.StudentId
-        """;
+            """;
 
-    public async Task<Result?> GetByAttemptIdAsync(int attemptId, CancellationToken cancellationToken = default)
-    {
-        using var connection = connectionFactory.CreateConnection();
-        return await connection.QuerySingleOrDefaultAsync<Result>(new CommandDefinition(
-            $"{SelectSql} WHERE r.AttemptId = @AttemptId;",
-            new { AttemptId = attemptId }, cancellationToken: cancellationToken));
+            {
     }
 
-    public async Task<Result?> GetByIdForStudentAsync(int resultId, int studentId, CancellationToken cancellationToken = default)
-    {
-        using var connection = connectionFactory.CreateConnection();
-        return await connection.QuerySingleOrDefaultAsync<Result>(new CommandDefinition(
-            $"{SelectSql} WHERE r.Id = @ResultId AND r.StudentId = @StudentId;",
-            new { ResultId = resultId, StudentId = studentId }, cancellationToken: cancellationToken));
-    }
-
-    public async Task<IReadOnlyList<Result>> GetByStudentIdAsync(int studentId, CancellationToken cancellationToken = default)
-    {
-        using var connection = connectionFactory.CreateConnection();
-        var results = await connection.QueryAsync<Result>(new CommandDefinition(
-            $"{SelectSql} WHERE r.StudentId = @StudentId ORDER BY r.GeneratedUtc DESC, r.Id DESC;",
-            new { StudentId = studentId }, cancellationToken: cancellationToken));
-        return results.AsList();
-    }
-
-    public async Task<IReadOnlyList<Result>> GetAllAsync(int? examId = null, CancellationToken cancellationToken = default)
-    {
-        using var connection = connectionFactory.CreateConnection();
-        var results = await connection.QueryAsync<Result>(new CommandDefinition(
-            $"{SelectSql} WHERE @ExamId IS NULL OR r.ExamId = @ExamId ORDER BY r.GeneratedUtc DESC, r.Id DESC;",
-            new { ExamId = examId }, cancellationToken: cancellationToken));
-        return results.AsList();
-    }
-
-    public async Task<int> CreateAsync(Result result, CancellationToken cancellationToken = default)
     {
         const string sql = """
-            INSERT INTO dbo.Results
-                (AttemptId, ExamId, StudentId, TotalQuestions, CorrectAnswers, WrongAnswers,
-                 UnansweredQuestions, TotalMarks, ObtainedMarks, Percentage, PassingMarks, Status)
-            OUTPUT INSERTED.Id
-            VALUES
-                (@AttemptId, @ExamId, @StudentId, @TotalQuestions, @CorrectAnswers, @WrongAnswers,
-                 @UnansweredQuestions, @TotalMarks, @ObtainedMarks, @Percentage, @PassingMarks, @Status);
+            SELECT Id, AttemptId, ExamId, StudentId, TotalMarks, PassingMarks, ObtainedMarks, Percentage,
+                   CorrectAnswers, WrongAnswers, UnattemptedQuestions, IsPassed, CalculatedUtc
+            FROM dbo.Results
+            WHERE AttemptId = @AttemptId;
             """;
+
         using var connection = connectionFactory.CreateConnection();
-        return await connection.ExecuteScalarAsync<int>(new CommandDefinition(
-            sql,
-            new
-            {
-                result.AttemptId,
-                result.ExamId,
-                result.StudentId,
-                result.TotalQuestions,
-                result.CorrectAnswers,
-                result.WrongAnswers,
-                result.UnansweredQuestions,
-                result.TotalMarks,
-                result.ObtainedMarks,
-                result.Percentage,
-                result.PassingMarks,
-                result.Status
-            },
-            cancellationToken: cancellationToken));
+    }
+
+    {
+        const string sql = """
+            SELECT r.Id AS ResultId, r.AttemptId, r.ExamId, r.StudentId,
+                   s.FullName AS StudentName, u.Email AS StudentEmail, e.Title AS ExamTitle,
+                   r.TotalMarks, r.PassingMarks, r.ObtainedMarks, r.Percentage,
+                   r.CorrectAnswers, r.WrongAnswers, r.UnattemptedQuestions, r.IsPassed,
+                   ISNULL(a.SubmittedUtc, a.ExpiresUtc) AS SubmittedUtc, r.CalculatedUtc
+            FROM dbo.Results r
+            INNER JOIN dbo.Students s ON r.StudentId = s.Id
+            INNER JOIN dbo.Users u ON s.UserId = u.Id
+            INNER JOIN dbo.Exams e ON r.ExamId = e.Id
+            INNER JOIN dbo.ExamAttempts a ON r.AttemptId = a.Id
+            WHERE r.ExamId = @ExamId
+            ORDER BY r.ObtainedMarks DESC, r.CalculatedUtc ASC;
+            """;
+
+        using var connection = connectionFactory.CreateConnection();
+        return results.AsList();
+    }
+
+    {
+        const string sql = """
+            SELECT r.Id AS ResultId, r.AttemptId, r.ExamId, e.Title AS ExamTitle,
+                   r.StudentId, s.FullName AS StudentName,
+                   r.TotalMarks, r.PassingMarks, r.ObtainedMarks, r.Percentage,
+                   r.CorrectAnswers, r.WrongAnswers, r.UnattemptedQuestions, r.IsPassed,
+                   ISNULL(a.SubmittedUtc, a.ExpiresUtc) AS SubmittedUtc
+            FROM dbo.Results r
+            INNER JOIN dbo.Exams e ON r.ExamId = e.Id
+            INNER JOIN dbo.Students s ON r.StudentId = s.Id
+            INNER JOIN dbo.ExamAttempts a ON r.AttemptId = a.Id
+            WHERE r.StudentId = @StudentId
+            ORDER BY r.CalculatedUtc DESC;
+            """;
+
+        using var connection = connectionFactory.CreateConnection();
+        return results.AsList();
+    }
+
+    {
+        const string sql = """
+            """;
+
+        using var connection = connectionFactory.CreateConnection();
+    {
     }
 }

@@ -50,7 +50,6 @@ public sealed class AttemptModel(IAttemptService attemptService) : PageModel
 
         if (Session.Attempt.Status != AttemptStatuses.InProgress)
         {
-            return RedirectToPage("Submitted", new { status = Session.Attempt.Status });
         }
 
         var result = await attemptService.SubmitAsync(
@@ -66,12 +65,10 @@ public sealed class AttemptModel(IAttemptService attemptService) : PageModel
 
         if (result.Succeeded)
         {
-            return RedirectToPage("Submitted", new { status = AttemptStatuses.Submitted });
         }
 
         if (result.Error?.StartsWith("The exam time expired", StringComparison.Ordinal) == true)
         {
-            return RedirectToPage("Submitted", new { status = AttemptStatuses.TimedOut });
         }
 
         ModelState.AddModelError(string.Empty, result.Error ?? "The exam could not be submitted.");

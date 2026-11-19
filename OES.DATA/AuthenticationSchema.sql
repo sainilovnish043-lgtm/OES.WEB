@@ -1,4 +1,3 @@
-[[[[[IF OBJECT_ID(N'dbo.Users', N'U') IS NULL
 BEGIN
 	CREATE TABLE dbo.Users
 	(
@@ -13,50 +12,13 @@ BEGIN
 	);
 END;
 
-IF EXISTS (SELECT 1 FROM sys.check_constraints WHERE name = N'CK_Users_Role' AND parent_object_id = OBJECT_ID(N'dbo.Users'))
 BEGIN
-	ALTER TABLE dbo.Users DROP CONSTRAINT CK_Users_Role;
-END;
-
-UPDATE dbo.Users
-SET Role = N'Student'
-WHERE Role = N'User';
-
-ALTER TABLE dbo.Users ADD CONSTRAINT CK_Users_Role CHECK (Role IN (N'Admin', N'Student'));
-
-IF OBJECT_ID(N'dbo.Students', N'U') IS NULL
-BEGIN
-	CREATE TABLE dbo.Students
 	(
-		Id int IDENTITY(1,1) NOT NULL CONSTRAINT PK_Students PRIMARY KEY,
-		UserId int NOT NULL CONSTRAINT UQ_Students_UserId UNIQUE,
-		FullName nvarchar(150) NOT NULL,
-		CreatedUtc datetime2(0) NOT NULL CONSTRAINT DF_Students_CreatedUtc DEFAULT SYSUTCDATETIME(),
-		CONSTRAINT FK_Students_Users FOREIGN KEY (UserId) REFERENCES dbo.Users(Id)
 	);
 END;
 
-IF OBJECT_ID(N'dbo.Exams', N'U') IS NULL
 BEGIN
-	CREATE TABLE dbo.Exams
 	(
-		Id int IDENTITY(1,1) NOT NULL CONSTRAINT PK_Exams PRIMARY KEY,
-		Title nvarchar(200) NOT NULL,
-		Description nvarchar(2000) NULL,
-		StartUtc datetime2(0) NOT NULL,
-		EndUtc datetime2(0) NOT NULL,
-		DurationMinutes int NOT NULL,
-		TotalMarks decimal(10,2) NOT NULL,
-		PassingMarks decimal(10,2) NOT NULL,
-		Status nvarchar(30) NOT NULL CONSTRAINT DF_Exams_Status DEFAULT N'Draft',
-		IsActive bit NOT NULL CONSTRAINT DF_Exams_IsActive DEFAULT 1,
-		CreatedBy int NOT NULL,
-		CreatedUtc datetime2(0) NOT NULL CONSTRAINT DF_Exams_CreatedUtc DEFAULT SYSUTCDATETIME(),
-		CONSTRAINT FK_Exams_Users FOREIGN KEY (CreatedBy) REFERENCES dbo.Users(Id),
-		CONSTRAINT CK_Exams_Dates CHECK (EndUtc > StartUtc),
-		CONSTRAINT CK_Exams_Duration CHECK (DurationMinutes > 0),
-		CONSTRAINT CK_Exams_Marks CHECK (TotalMarks > 0 AND PassingMarks >= 0 AND PassingMarks <= TotalMarks),
-		CONSTRAINT CK_Exams_Status CHECK (Status IN (N'Draft', N'Published', N'Completed', N'Cancelled'))
 	);
 END;
 
@@ -91,38 +53,18 @@ BEGIN
 	);
 END;
 
-IF OBJECT_ID(N'dbo.ExamAttempts', N'U') IS NULL
 BEGIN
-	CREATE TABLE dbo.ExamAttempts
 	(
-		Id int IDENTITY(1,1) NOT NULL CONSTRAINT PK_ExamAttempts PRIMARY KEY,
-		ExamId int NOT NULL,
-		StudentId int NOT NULL,
-		StartedUtc datetime2(0) NOT NULL,
-		ExpiresUtc datetime2(0) NOT NULL,
-		SubmittedUtc datetime2(0) NULL,
-		Status nvarchar(30) NOT NULL CONSTRAINT DF_ExamAttempts_Status DEFAULT N'InProgress',
-		CONSTRAINT FK_ExamAttempts_Exams FOREIGN KEY (ExamId) REFERENCES dbo.Exams(Id),
-		CONSTRAINT FK_ExamAttempts_Students FOREIGN KEY (StudentId) REFERENCES dbo.Students(Id),
-		CONSTRAINT UQ_ExamAttempts_Exam_Student UNIQUE (ExamId, StudentId),
-		CONSTRAINT CK_ExamAttempts_Status CHECK (Status IN (N'InProgress', N'Submitted', N'TimedOut')),
-		CONSTRAINT CK_ExamAttempts_Expiry CHECK (ExpiresUtc > StartedUtc)
 	);
 END;
 
-IF OBJECT_ID(N'dbo.StudentAnswers', N'U') IS NULL
+IF EXISTS (SELECT 1 FROM sys.check_constraints WHERE name = N'CK_Users_Role' AND parent_object_id = OBJECT_ID(N'dbo.Users'))
 BEGIN
-	CREATE TABLE dbo.StudentAnswers
+	ALTER TABLE dbo.Users DROP CONSTRAINT CK_Users_Role;
+END;
+
+BEGIN
 	(
-		Id int IDENTITY(1,1) NOT NULL CONSTRAINT PK_StudentAnswers PRIMARY KEY,
-		AttemptId int NOT NULL,
-		QuestionId int NOT NULL,
-		SelectedOptionId int NOT NULL,
-		AnsweredUtc datetime2(0) NOT NULL CONSTRAINT DF_StudentAnswers_AnsweredUtc DEFAULT SYSUTCDATETIME(),
-		CONSTRAINT FK_StudentAnswers_Attempts FOREIGN KEY (AttemptId) REFERENCES dbo.ExamAttempts(Id) ON DELETE CASCADE,
-		CONSTRAINT FK_StudentAnswers_Questions FOREIGN KEY (QuestionId) REFERENCES dbo.Questions(Id),
-		CONSTRAINT FK_StudentAnswers_Options FOREIGN KEY (SelectedOptionId) REFERENCES dbo.Options(Id),
-		CONSTRAINT UQ_StudentAnswers_Attempt_Question UNIQUE (AttemptId, QuestionId)
 	);
 END;
 
@@ -131,7 +73,6 @@ BEGIN
 	CREATE TABLE dbo.Results
 	(
 		Id int IDENTITY(1,1) NOT NULL CONSTRAINT PK_Results PRIMARY KEY,
-		AttemptId int NOT NULL,
 		ExamId int NOT NULL,
 		StudentId int NOT NULL,
 		TotalQuestions int NOT NULL,
@@ -142,13 +83,25 @@ BEGIN
 		ObtainedMarks decimal(10,2) NOT NULL,
 		Percentage decimal(6,2) NOT NULL,
 		PassingMarks decimal(10,2) NOT NULL,
-		Status nvarchar(20) NOT NULL,
-		GeneratedUtc datetime2(0) NOT NULL CONSTRAINT DF_Results_GeneratedUtc DEFAULT SYSUTCDATETIME(),
-		CONSTRAINT UQ_Results_Attempt UNIQUE (AttemptId),
-		CONSTRAINT FK_Results_Attempts FOREIGN KEY (AttemptId) REFERENCES dbo.ExamAttempts(Id),
 		CONSTRAINT FK_Results_Exams FOREIGN KEY (ExamId) REFERENCES dbo.Exams(Id),
-		CONSTRAINT FK_Results_Students FOREIGN KEY (StudentId) REFERENCES dbo.Students(Id),
-		CONSTRAINT CK_Results_Status CHECK (Status IN (N'Pass', N'Fail'))
 	);
 END;
 
+IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.Users') AND name = N'TwoFactorEnabled')
+BEGIN
+	ALTER TABLE dbo.Users ADD TwoFactorEnabled bit NOT NULL CONSTRAINT DF_Users_TwoFactorEnabled DEFAULT 1;
+END;
+
+IF OBJECT_ID(N'dbo.TwoFactorCodes', N'U') IS NULL
+BEGIN
+	CREATE TABLE dbo.TwoFactorCodes
+	(
+		Id int IDENTITY(1,1) NOT NULL CONSTRAINT PK_TwoFactorCodes PRIMARY KEY,
+		UserId int NOT NULL,
+		Code nvarchar(10) NOT NULL,
+		ExpiresUtc datetime2(0) NOT NULL,
+		IsUsed bit NOT NULL CONSTRAINT DF_TwoFactorCodes_IsUsed DEFAULT 0,
+		CreatedUtc datetime2(0) NOT NULL CONSTRAINT DF_TwoFactorCodes_CreatedUtc DEFAULT SYSUTCDATETIME(),
+		CONSTRAINT FK_TwoFactorCodes_Users FOREIGN KEY (UserId) REFERENCES dbo.Users(Id) ON DELETE CASCADE
+	);
+END;

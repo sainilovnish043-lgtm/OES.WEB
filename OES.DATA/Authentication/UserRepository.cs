@@ -9,7 +9,6 @@ public sealed class UserRepository(ISqlConnectionFactory connectionFactory) : IU
     public async Task<User?> FindByEmailAsync(string email, CancellationToken cancellationToken = default)
     {
         const string sql = """
-            SELECT Id, Email, PasswordHash, Role, IsActive
             FROM dbo.Users
             WHERE Email = @Email;
             """;
@@ -19,18 +18,28 @@ public sealed class UserRepository(ISqlConnectionFactory connectionFactory) : IU
             new CommandDefinition(sql, new { Email = email }, cancellationToken: cancellationToken));
     }
 
+    public async Task<User?> FindByIdAsync(int id, CancellationToken cancellationToken = default)
+    {
+        const string sql = """
+            SELECT Id, Email, PasswordHash, Role, IsActive, TwoFactorEnabled
+            FROM dbo.Users
+            WHERE Id = @Id;
+            """;
+
+        using var connection = connectionFactory.CreateConnection();
+        return await connection.QuerySingleOrDefaultAsync<User>(
+            new CommandDefinition(sql, new { Id = id }, cancellationToken: cancellationToken));
+    }
+
     public async Task<Student?> FindStudentByUserIdAsync(int userId, CancellationToken cancellationToken = default)
     {
         const string sql = """
-            SELECT s.Id, s.UserId, s.FullName, u.Email, u.IsActive, s.CreatedUtc
             FROM dbo.Students AS s
             INNER JOIN dbo.Users AS u ON u.Id = s.UserId
             WHERE s.UserId = @UserId;
             """;
 
         using var connection = connectionFactory.CreateConnection();
-        return await connection.QuerySingleOrDefaultAsync<Student>(
-            new CommandDefinition(sql, new { UserId = userId }, cancellationToken: cancellationToken));
     }
 
     public async Task<IReadOnlyList<Student>> GetStudentsAsync(CancellationToken cancellationToken = default)
@@ -59,9 +68,7 @@ public sealed class UserRepository(ISqlConnectionFactory connectionFactory) : IU
     public async Task<int> CreateStudentAsync(string email, string passwordHash, string fullName, CancellationToken cancellationToken = default)
     {
         const string userSql = """
-            INSERT INTO dbo.Users (Email, PasswordHash, Role, IsActive)
             OUTPUT INSERTED.Id
-            VALUES (@Email, @PasswordHash, N'Student', 1);
             """;
         const string studentSql = """
             INSERT INTO dbo.Students (UserId, FullName)
@@ -100,5 +107,46 @@ public sealed class UserRepository(ISqlConnectionFactory connectionFactory) : IU
         var affected = await connection.ExecuteAsync(new CommandDefinition(
             sql, new { UserId = userId, IsActive = isActive }, cancellationToken: cancellationToken));
         return affected == 1;
+    }
+
+    public async Task<bool> SetTwoFactorEnabledAsync(int userId, bool enabled, CancellationToken cancellationToken = default)
+    {
+        const string sql = "UPDATE dbo.Users SET TwoFactorEnabled = @Enabled WHERE Id = @UserId;";
+        using var connection = connectionFactory.CreateConnection();
+        var affected = await connection.ExecuteAsync(new CommandDefinition(
+            sql, new { UserId = userId, Enabled = enabled }, cancellationToken: cancellationToken));
+        return affected == 1;
+    }
+
+    public async Task SaveTwoFactorCodeAsync(int userId, string code, DateTime expiresUtc, CancellationToken cancellationToken = default)
+    {
+        const string sql = """
+            UPDATE dbo.TwoFactorCodes SET IsUsed = 1 WHERE UserId = @UserId AND IsUsed = 0;
+            INSERT INTO dbo.TwoFactorCodes (UserId, Code, ExpiresUtc)
+            VALUES (@UserId, @Code, @ExpiresUtc);
+            """;
+
+        using var connection = connectionFactory.CreateConnection();
+        await connection.ExecuteAsync(new CommandDefinition(
+            sql, new { UserId = userId, Code = code, ExpiresUtc = expiresUtc }, cancellationToken: cancellationToken));
+    }
+
+    public async Task<bool> ValidateTwoFactorCodeAsync(int userId, string code, DateTime utcNow, CancellationToken cancellationToken = default)
+    {
+        const string sql = """
+            UPDATE dbo.TwoFactorCodes
+            SET IsUsed = 1
+            WHERE Id = (
+                SELECT TOP 1 Id
+                FROM dbo.TwoFactorCodes
+                WHERE UserId = @UserId AND Code = @Code AND IsUsed = 0 AND ExpiresUtc > @UtcNow
+                ORDER BY Id DESC
+            );
+            """;
+
+        using var connection = connectionFactory.CreateConnection();
+        var affected = await connection.ExecuteAsync(new CommandDefinition(
+            sql, new { UserId = userId, Code = code, UtcNow = utcNow }, cancellationToken: cancellationToken));
+        return affected > 0;
     }
 }

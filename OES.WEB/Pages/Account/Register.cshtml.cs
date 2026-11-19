@@ -1,12 +1,12 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using OES.MODELS.Authentication;
-using OES.SERVICES.Authentication;
 
 namespace OES.WEB.Pages.Account;
 
-public sealed class RegisterModel(IAuthenticationService authenticationService) : PageModel
 {
     [BindProperty]
     public RegistrationInput Input { get; set; } = new();
@@ -41,6 +41,20 @@ public sealed class RegisterModel(IAuthenticationService authenticationService) 
         return RedirectToPage("/Account/Login");
     }
 
+    public IActionResult OnPostGoogle()
+    {
+        var clientId = configuration["Authentication:Google:ClientId"] ?? configuration["web:client_id"];
+        if (string.IsNullOrWhiteSpace(clientId) || clientId.Contains("YOUR_GOOGLE_CLIENT_ID", StringComparison.OrdinalIgnoreCase))
+        {
+            ModelState.AddModelError(string.Empty, "Google Sign-In is enabled! Please set your Google ClientId and ClientSecret in appsettings.json to connect to Google.");
+            return Page();
+        }
+
+        var redirectUrl = Url.Page("/Account/ExternalLoginCallback", pageHandler: null);
+        var properties = new AuthenticationProperties { RedirectUri = redirectUrl };
+        return Challenge(properties, GoogleDefaults.AuthenticationScheme);
+    }
+
     public sealed class RegistrationInput
     {
         [Required, StringLength(150, MinimumLength = 2)]
@@ -50,10 +64,8 @@ public sealed class RegisterModel(IAuthenticationService authenticationService) 
         [Required, EmailAddress]
         public string Email { get; set; } = string.Empty;
 
-        [Required, StringLength(100, MinimumLength = 8), DataType(DataType.Password)]
         public string Password { get; set; } = string.Empty;
 
-        [Required, Compare(nameof(Password)), DataType(DataType.Password)]
         [Display(Name = "Confirm password")]
         public string ConfirmPassword { get; set; } = string.Empty;
     }
