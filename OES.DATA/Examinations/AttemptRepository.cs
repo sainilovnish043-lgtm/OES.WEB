@@ -30,6 +30,18 @@ public sealed class AttemptRepository(ISqlConnectionFactory connectionFactory) :
             sql, new { ExamId = examId, StudentId = studentId }, cancellationToken: cancellationToken));
     }
 
+    public async Task<ExamAttempt?> GetByIdAsync(int attemptId, CancellationToken cancellationToken = default)
+    {
+        const string sql = """
+            SELECT Id, ExamId, StudentId, StartedUtc, ExpiresUtc, SubmittedUtc, Status
+            FROM dbo.ExamAttempts
+            WHERE Id = @AttemptId;
+            """;
+        using var connection = connectionFactory.CreateConnection();
+        return await connection.QuerySingleOrDefaultAsync<ExamAttempt>(new CommandDefinition(
+            sql, new { AttemptId = attemptId }, cancellationToken: cancellationToken));
+    }
+
     public async Task<ExamAttempt?> GetByIdForStudentAsync(int attemptId, int studentId, CancellationToken cancellationToken = default)
     {
         const string sql = """

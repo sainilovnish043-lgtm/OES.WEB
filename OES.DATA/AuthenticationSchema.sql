@@ -125,3 +125,45 @@ BEGIN
 		CONSTRAINT FK_Students_Users FOREIGN KEY (UserId) REFERENCES dbo.Users(Id)
 	);
 END;
+
+IF OBJECT_ID(N'dbo.Results', N'U') IS NULL
+BEGIN
+	CREATE TABLE dbo.Results
+	(
+		Id int IDENTITY(1,1) NOT NULL CONSTRAINT PK_Results PRIMARY KEY,
+		AttemptId int NOT NULL CONSTRAINT UQ_Results_AttemptId UNIQUE,
+		ExamId int NOT NULL,
+		StudentId int NOT NULL,
+		TotalMarks decimal(10,2) NOT NULL,
+		PassingMarks decimal(10,2) NOT NULL,
+		ObtainedMarks decimal(10,2) NOT NULL,
+		Percentage decimal(5,2) NOT NULL,
+		CorrectAnswers int NOT NULL,
+		WrongAnswers int NOT NULL,
+		UnattemptedQuestions int NOT NULL,
+		IsPassed bit NOT NULL,
+		CalculatedUtc datetime2(0) NOT NULL CONSTRAINT DF_Results_CalculatedUtc DEFAULT SYSUTCDATETIME(),
+		CONSTRAINT FK_Results_Attempts FOREIGN KEY (AttemptId) REFERENCES dbo.ExamAttempts(Id) ON DELETE CASCADE,
+		CONSTRAINT FK_Results_Exams FOREIGN KEY (ExamId) REFERENCES dbo.Exams(Id),
+		CONSTRAINT FK_Results_Students FOREIGN KEY (StudentId) REFERENCES dbo.Students(Id)
+	);
+END;
+
+IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.Users') AND name = N'TwoFactorEnabled')
+BEGIN
+	ALTER TABLE dbo.Users ADD TwoFactorEnabled bit NOT NULL CONSTRAINT DF_Users_TwoFactorEnabled DEFAULT 1;
+END;
+
+IF OBJECT_ID(N'dbo.TwoFactorCodes', N'U') IS NULL
+BEGIN
+	CREATE TABLE dbo.TwoFactorCodes
+	(
+		Id int IDENTITY(1,1) NOT NULL CONSTRAINT PK_TwoFactorCodes PRIMARY KEY,
+		UserId int NOT NULL,
+		Code nvarchar(10) NOT NULL,
+		ExpiresUtc datetime2(0) NOT NULL,
+		IsUsed bit NOT NULL CONSTRAINT DF_TwoFactorCodes_IsUsed DEFAULT 0,
+		CreatedUtc datetime2(0) NOT NULL CONSTRAINT DF_TwoFactorCodes_CreatedUtc DEFAULT SYSUTCDATETIME(),
+		CONSTRAINT FK_TwoFactorCodes_Users FOREIGN KEY (UserId) REFERENCES dbo.Users(Id) ON DELETE CASCADE
+	);
+END;

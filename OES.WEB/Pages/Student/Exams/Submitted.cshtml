@@ -2,18 +2,166 @@
 @model OES.WEB.Pages.Student.Exams.SubmittedModel
 @using OES.MODELS.Examinations
 @{
-	ViewData["Title"] = "Exam submitted";
+    ViewData["Title"] = "Exam Results & Scorecard";
 }
 
-@if (Model.Status == AttemptStatuses.TimedOut)
-{
-	<h1>Time expired</h1>
-	<div class="alert alert-warning">The exam time expired. Your submitted answers were saved.</div>
-}
-else
-{
-	<h1>Exam submitted</h1>
-	<div class="alert alert-success">Your exam answers were submitted successfully.</div>
-}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        @if (Model.Status == AttemptStatuses.TimedOut)
+        {
+            <div class="alert alert-warning d-flex align-items-center gap-2 mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+                <div>
+                    <strong>Exam Time Expired:</strong> Your answers were automatically submitted.
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-success d-flex align-items-center gap-2 mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+                <div>
+                    <strong>Exam Completed:</strong> Your examination answers were recorded and evaluated.
+                </div>
+            </div>
+        }
 
-<a asp-page="Index" class="btn btn-primary">Back to available exams</a>
+        @if (Model.Result is not null)
+        {
+            <!-- Instant Scorecard Card -->
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+                <div class="card-header p-4 text-center @(Model.Result.IsPassed ? "bg-success text-white" : "bg-danger text-white")">
+                    <div class="mb-2">
+                        @if (Model.Result.IsPassed)
+                        {
+                            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                            </svg>
+                        }
+                        else
+                        {
+                            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="15" y1="9" x2="9" y2="15"></line>
+                                <line x1="9" y1="9" x2="15" y2="15"></line>
+                            </svg>
+                        }
+                    </div>
+                    <h2 class="h3 fw-bold mb-1">@(Model.Result.IsPassed ? "Congratulations! You Passed" : "Needs Improvement — Failed")</h2>
+                    <p class="mb-0 opacity-75">Passing Marks Required: @Model.Result.PassingMarks / @Model.Result.TotalMarks</p>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row text-center g-3 mb-4">
+                        <div class="col-sm-4">
+                            <div class="p-3 bg-light rounded-3">
+                                <div class="text-muted small mb-1">Marks Obtained</div>
+                                <div class="fs-2 fw-bold text-dark">@Model.Result.ObtainedMarks <span class="fs-6 text-muted">/ @Model.Result.TotalMarks</span></div>
+                            </div>
+                        </div>
+                        <div class="col-sm-4">
+                            <div class="p-3 bg-light rounded-3">
+                                <div class="text-muted small mb-1">Percentage</div>
+                                <div class="fs-2 fw-bold text-primary">@Model.Result.Percentage%</div>
+                            </div>
+                        </div>
+                        <div class="col-sm-4">
+                            <div class="p-3 bg-light rounded-3">
+                                <div class="text-muted small mb-1">Status</div>
+                                <div class="fs-2 fw-bold @(Model.Result.IsPassed ? "text-success" : "text-danger")">
+                                    @(Model.Result.IsPassed ? "PASSED" : "FAILED")
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h5 class="fw-bold mb-3">Question Breakdown</h5>
+                    <div class="list-group mb-4">
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <span><strong class="text-success">✓ Correct Answers:</strong></span>
+                            <span class="badge bg-success rounded-pill px-3 py-2">@Model.Result.CorrectAnswers</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <span><strong class="text-danger">✗ Wrong Answers:</strong></span>
+                            <span class="badge bg-danger rounded-pill px-3 py-2">@Model.Result.WrongAnswers</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <span><strong class="text-secondary">○ Skipped / Unattempted:</strong></span>
+                            <span class="badge bg-secondary rounded-pill px-3 py-2">@Model.Result.UnattemptedQuestions</span>
+                        </div>
+                    </div>
+
+                    @if (Model.AiRecommendation is not null)
+                    {
+                        <!-- AI Study Insights Card -->
+                        <div class="border rounded-3 overflow-hidden mb-2">
+                            <div class="bg-purple text-white p-3 d-flex align-items-center gap-2">
+                                <span class="fs-5">✨</span>
+                                <h6 class="fw-bold mb-0">AI Performance Insights & Study Recommendations</h6>
+                            </div>
+                            <div class="p-3 bg-white">
+                                <p class="text-dark small mb-3">@Model.AiRecommendation.OverallFeedback</p>
+
+                                <div class="row g-2 mb-3">
+                                    @if (Model.AiRecommendation.Strengths.Count > 0)
+                                    {
+                                        <div class="col-sm-6">
+                                            <div class="p-2 bg-success-subtle rounded-2 h-100">
+                                                <div class="fw-bold text-success small mb-1">💪 Strengths</div>
+                                                <ul class="mb-0 ps-3 small text-dark">
+                                                    @foreach (var s in Model.AiRecommendation.Strengths)
+                                                    {
+                                                        <li>@s</li>
+                                                    }
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    }
+
+                                    @if (Model.AiRecommendation.AreasToImprove.Count > 0)
+                                    {
+                                        <div class="col-sm-6">
+                                            <div class="p-2 bg-warning-subtle rounded-2 h-100">
+                                                <div class="fw-bold text-warning small mb-1">🎯 Areas to Focus</div>
+                                                <ul class="mb-0 ps-3 small text-dark">
+                                                    @foreach (var a in Model.AiRecommendation.AreasToImprove)
+                                                    {
+                                                        <li>@a</li>
+                                                    }
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+
+                                @if (Model.AiRecommendation.StudyTips.Count > 0)
+                                {
+                                    <div class="p-2 bg-light rounded-2">
+                                        <div class="fw-bold small mb-1">💡 Personalized Action Plan</div>
+                                        <ul class="mb-0 ps-3 small text-muted">
+                                            @foreach (var tip in Model.AiRecommendation.StudyTips)
+                                            {
+                                                <li>@tip</li>
+                                            }
+                                        </ul>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+        <div class="d-flex justify-content-center gap-3">
+            <a asp-page="Index" class="btn btn-outline-secondary btn-pill px-4">Available Exams</a>
+            <a asp-page="/Student/Results/Index" class="btn btn-purple btn-pill px-4">View All My Results</a>
+        </div>
+    </div>
+</div>

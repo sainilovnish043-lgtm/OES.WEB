@@ -12,7 +12,12 @@
 	</div>
 	@if (Model.Exam?.Status == ExamStatuses.Draft && Model.Exam.IsActive)
 	{
-		<a asp-page="Create" asp-route-examId="@Model.Exam.Id" class="btn btn-primary">Add question</a>
+		<div class="d-flex gap-2">
+			<a asp-page="/Admin/Exams/AiGenerate" asp-route-examId="@Model.Exam.Id" class="btn btn-purple text-white">
+				✨ Generate with AI
+			</a>
+			<a asp-page="Create" asp-route-examId="@Model.Exam.Id" class="btn btn-primary">Add question</a>
+		</div>
 	}
 </div>
 

@@ -1,0 +1,68 @@
+@page
+@model OES.WEB.Pages.Account.VerifyTwoFactorModel
+@{
+    ViewData["Title"] = "Two-Factor Verification";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5">
+            <div class="text-center mb-4">
+                <div class="portal-brand-icon mx-auto mb-3" style="width: 52px; height: 52px; background: linear-gradient(135deg, #7c3aed, #4c1d95);">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                        <path d="m9 12 2 2 4-4"></path>
+                    </svg>
+                </div>
+                <h1 class="h3 fw-bold mb-1">Two-Factor Security</h1>
+                <p class="text-muted small mb-0">Enter the 6-digit code for <strong>@Model.UserEmail</strong></p>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(Model.DemoCode))
+            {
+                <div class="alert alert-info border-info d-flex align-items-center gap-2 mb-3 py-2 px-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary flex-shrink-0">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="16" x2="12" y2="12"></line>
+                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                    </svg>
+                    <div class="small">
+                        <strong>Security Code:</strong> <span class="badge bg-primary fs-6 font-monospace letter-spacing-1">@Model.DemoCode</span>
+                    </div>
+                </div>
+            }
+
+            @if (TempData["ResendSuccess"] is string resendMsg)
+            {
+                <div class="alert alert-success small py-2 mb-3">@resendMsg</div>
+            }
+
+            <form method="post" asp-route-returnUrl="@Model.ReturnUrl">
+                <div class="mb-4">
+                    <label asp-for="Code" class="form-label small fw-semibold text-muted text-center d-block">6-Digit Verification Code</label>
+                    <input asp-for="Code"
+                           class="form-control form-control-lg text-center font-monospace fs-3 fw-bold rounded-3 letter-spacing-2"
+                           maxlength="6"
+                           placeholder="000000"
+                           inputmode="numeric"
+                           autocomplete="one-time-code"
+                           autofocus />
+                    <span asp-validation-for="Code" class="text-danger small d-block text-center mt-1"></span>
+                </div>
+
+                <button type="submit" class="btn btn-purple btn-pill w-100 py-2 fs-6">Verify & Continue</button>
+            </form>
+
+            <div class="d-flex justify-content-between align-items-center mt-4 pt-2 border-top">
+                <form method="post" asp-page-handler="Resend" asp-route-returnUrl="@Model.ReturnUrl">
+                    <button type="submit" class="btn btn-link text-decoration-none small text-muted p-0">Resend Code</button>
+                </form>
+                <a asp-page="/Account/Login" class="text-decoration-none small text-muted">Back to Sign In</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

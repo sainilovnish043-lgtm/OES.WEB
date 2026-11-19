@@ -1,0 +1,184 @@
+@page "{examId:int}"
+@model OES.WEB.Pages.Admin.Exams.AiGenerateModel
+@{
+    ViewData["Title"] = "AI Question Generator";
+}
+
+<div class="container-fluid px-0">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge bg-purple text-white px-2 py-1">AI Powered ✨</span>
+                <span class="badge bg-secondary">@Model.Exam?.Title</span>
+            </div>
+            <h2 class="h3 fw-bold mb-0">Generate Questions with Gemini AI</h2>
+            <p class="text-muted small mb-0">Generate high-quality multiple choice questions (MCQs) automatically based on any topic or syllabus.</p>
+        </div>
+        <a asp-page="/Admin/Exams/Questions/Index" asp-route-examId="@Model.Exam?.Id" class="btn btn-outline-secondary">
+            &larr; Back to Questions
+        </a>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+    {
+        <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+            @Model.StatusMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+            @Model.ErrorMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="row g-4">
+        <!-- Configuration Card -->
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm rounded-3 p-4">
+                <h5 class="fw-bold mb-3 d-flex align-items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                    Generation Parameters
+                </h5>
+
+                <form method="post" asp-page-handler="Generate" asp-route-examId="@Model.Exam?.Id" id="aiForm">
+                    <div class="mb-3">
+                        <label asp-for="Input.Topic" class="form-label fw-semibold">Topic / Syllabus Subject</label>
+                        <input asp-for="Input.Topic" class="form-control" placeholder="e.g. C# Object Oriented Programming, SQL Joins, World War 2" />
+                        <span asp-validation-for="Input.Topic" class="text-danger small"></span>
+                        <div class="form-text">Be as specific or general as you like.</div>
+                    </div>
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-sm-6">
+                            <label asp-for="Input.Difficulty" class="form-label fw-semibold">Difficulty</label>
+                            <select asp-for="Input.Difficulty" class="form-select">
+                                <option value="Easy">Easy</option>
+                                <option value="Medium">Medium</option>
+                                <option value="Hard">Hard</option>
+                            </select>
+                        </div>
+                        <div class="col-sm-6">
+                            <label asp-for="Input.Count" class="form-label fw-semibold">No. of Questions</label>
+                            <input asp-for="Input.Count" type="number" min="1" max="15" class="form-control" />
+                            <span asp-validation-for="Input.Count" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="row g-2 mb-4">
+                        <div class="col-sm-6">
+                            <label asp-for="Input.Marks" class="form-label fw-semibold">Marks per Question</label>
+                            <input asp-for="Input.Marks" type="number" step="0.5" class="form-control" />
+                            <span asp-validation-for="Input.Marks" class="text-danger small"></span>
+                        </div>
+                        <div class="col-sm-6">
+                            <label asp-for="Input.NegativeMarks" class="form-label fw-semibold">Negative Marks</label>
+                            <input asp-for="Input.NegativeMarks" type="number" step="0.25" class="form-control" />
+                            <span asp-validation-for="Input.NegativeMarks" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-purple text-white w-100 py-2 fw-semibold" id="generateBtn">
+                        <span class="spinner-border spinner-border-sm me-2 d-none" id="spinner"></span>
+                        ✨ Generate Questions Now
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Generated Questions Preview -->
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm rounded-3 p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0">Generated Questions Preview</h5>
+                    @if (Model.GeneratedQuestions.Count > 0)
+                    {
+                        <span class="badge bg-success">@Model.GeneratedQuestions.Count Ready to Save</span>
+                    }
+                </div>
+
+                @if (Model.GeneratedQuestions.Count == 0)
+                {
+                    <div class="text-center py-5 my-auto text-muted">
+                        <div class="display-5 mb-2">🤖</div>
+                        <h6 class="fw-bold">No questions generated yet</h6>
+                        <p class="small mb-0">Configure the parameters on the left and click "Generate Questions Now".</p>
+                    </div>
+                }
+                else
+                {
+                    <form method="post" asp-page-handler="Save" asp-route-examId="@Model.Exam?.Id">
+                        <input type="hidden" asp-for="QuestionsJson" />
+                        <input type="hidden" asp-for="Input.Marks" />
+                        <input type="hidden" asp-for="Input.NegativeMarks" />
+
+                        <div class="d-flex justify-content-between align-items-center bg-light p-3 rounded-3 mb-3">
+                            <div class="small text-muted">
+                                Total: <strong>@Model.GeneratedQuestions.Count questions</strong> (@(Model.GeneratedQuestions.Count * Model.Input.Marks) marks)
+                            </div>
+                            <button type="submit" class="btn btn-success fw-semibold">
+                                ✓ Save All to Exam
+                            </button>
+                        </div>
+
+                        <div class="vstack gap-3" style="max-height: 520px; overflow-y: auto; padding-right: 4px;">
+                            @for (var i = 0; i < Model.GeneratedQuestions.Count; i++)
+                            {
+                                var q = Model.GeneratedQuestions[i];
+                                <div class="border rounded-3 p-3 bg-white">
+                                    <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                                        <h6 class="fw-bold mb-0">Q@(i + 1). @q.QuestionText</h6>
+                                        <span class="badge bg-primary-subtle text-primary">+@Model.Input.Marks pts</span>
+                                    </div>
+
+                                    <div class="row g-2 mb-2">
+                                        @foreach (var opt in q.Options)
+                                        {
+                                            var isCorrect = opt.IsCorrect;
+                                            var optClass = isCorrect ? "border-success bg-success-subtle text-success fw-semibold" : "bg-light";
+                                            <div class="col-sm-6">
+                                                <div class="p-2 border rounded-2 small @optClass d-flex justify-content-between align-items-center">
+                                                    <span>@opt.OptionText</span>
+                                                    @if (isCorrect)
+                                                    {
+                                                        <span class="badge bg-success">Correct</span>
+                                                    }
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+
+                                    @if (!string.IsNullOrWhiteSpace(q.Explanation))
+                                    {
+                                        <div class="small text-muted border-top pt-2 mt-2">
+                                            💡 <em>@q.Explanation</em>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </form>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.getElementById('aiForm')?.addEventListener('submit', function () {
+            const btn = document.getElementById('generateBtn');
+            const spinner = document.getElementById('spinner');
+            if (btn && spinner) {
+                btn.disabled = true;
+                spinner.classList.remove('d-none');
+                btn.innerText = ' Generating with AI...';
+                btn.prepend(spinner);
+            }
+        });
+    </script>
+}

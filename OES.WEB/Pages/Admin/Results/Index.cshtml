@@ -1,0 +1,216 @@
+@page
+@model OES.WEB.Pages.Admin.Results.IndexModel
+@{
+    ViewData["Title"] = "Results Management & GridView";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h1 class="h3 fw-bold mb-1">Results Management & Performance</h1>
+        <p class="text-muted mb-0">View student performance, calculate scores, and analyze exam-wise results.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <button onclick="window.print()" class="btn btn-outline-secondary btn-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1">
+                <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                <rect x="6" y="14" width="12" height="8"></rect>
+            </svg>
+            Print Results
+        </button>
+    </div>
+</div>
+
+<!-- Performance Summary Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background-color: #ede9fe; color: #6d28d9;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+            </div>
+            <div>
+                <div class="stat-number">@Model.Summary.TotalAttempts</div>
+                <div class="stat-label">Total Submissions</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background-color: #dcfce7; color: #16a34a;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+            </div>
+            <div>
+                <div class="stat-number text-success">@Model.Summary.PassedCount</div>
+                <div class="stat-label">Passed Students</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background-color: #fee2e2; color: #dc2626;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </div>
+            <div>
+                <div class="stat-number text-danger">@Model.Summary.FailedCount</div>
+                <div class="stat-label">Failed Students</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background-color: #e0f2fe; color: #0284c7;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="20" x2="12" y2="10"></line>
+                    <line x1="18" y1="20" x2="18" y2="4"></line>
+                    <line x1="6" y1="20" x2="6" y2="16"></line>
+                </svg>
+            </div>
+            <div>
+                <div class="stat-number">@Model.Summary.PassPercentage%</div>
+                <div class="stat-label">Pass Percentage</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filter & Search Bar -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-3">
+        <form method="get" class="row g-2 align-items-center">
+            <div class="col-md-5">
+                <label class="form-label small fw-semibold text-muted mb-1">Filter by Examination:</label>
+                <select name="ExamId" asp-for="ExamId" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <option value="">-- All Examinations --</option>
+                    @foreach (var exam in Model.Exams)
+                    {
+                        <option value="@exam.Id">@exam.Title (@exam.Status)</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-5">
+                <label class="form-label small fw-semibold text-muted mb-1">Search Student / Exam:</label>
+                <input type="text" name="SearchTerm" asp-for="SearchTerm" class="form-control form-control-sm" placeholder="Search by name, email or exam title..." />
+            </div>
+            <div class="col-md-2 d-flex align-items-end gap-1">
+                <button type="submit" class="btn btn-purple btn-sm w-100">Search</button>
+                @if (Model.ExamId.HasValue || !string.IsNullOrWhiteSpace(Model.SearchTerm))
+                {
+                    <a asp-page="./Index" class="btn btn-outline-secondary btn-sm">Clear</a>
+                }
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Results GridView (Table) -->
+<div class="gridview-card">
+    <div class="gridview-header d-flex justify-content-between align-items-center">
+        <h2 class="h5 mb-0 fw-bold">Student-Wise & Exam-Wise Results GridView</h2>
+        <span class="badge bg-light text-dark border">@Model.Results.Count Record(s)</span>
+    </div>
+    <div class="table-responsive">
+        @if (Model.Results.Count == 0)
+        {
+            <div class="text-center py-5 text-muted">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="mb-3 text-secondary">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="8" y1="12" x2="16" y2="12"></line>
+                </svg>
+                <p class="mb-0">No exam results found matching your criteria.</p>
+            </div>
+        }
+        else
+        {
+            <table class="table gridview-table table-hover">
+                <thead>
+                    <tr>
+                        <th style="width: 50px;">#</th>
+                        <th>Student Details</th>
+                        <th>Examination</th>
+                        <th>Marks Obtained</th>
+                        <th>Percentage</th>
+                        <th>Breakdown (C / W / S)</th>
+                        <th>Status</th>
+                        <th>Submitted At</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (var i = 0; i < Model.Results.Count; i++)
+                    {
+                        var item = Model.Results[i];
+                        <tr>
+                            <td class="text-muted fw-bold">@(i + 1)</td>
+                            <td>
+                                <div class="fw-bold text-dark">@item.StudentName</div>
+                                <div class="small text-muted">@item.StudentEmail</div>
+                            </td>
+                            <td>
+                                <div class="fw-semibold">@item.ExamTitle</div>
+                                <div class="small text-muted">Passing: @item.PassingMarks / @item.TotalMarks</div>
+                            </td>
+                            <td>
+                                <span class="fw-bold fs-6">@item.ObtainedMarks</span>
+                                <span class="text-muted small">/ @item.TotalMarks</span>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="progress flex-grow-1" style="height: 6px; width: 60px;">
+                                        <div class="progress-bar @(item.IsPassed ? "bg-success" : "bg-danger")"
+                                             role="progressbar"
+                                             style="width: @(Math.Min(100, item.Percentage))%;"></div>
+                                    </div>
+                                    <span class="small fw-semibold">@item.Percentage%</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-success-subtle text-success border border-success-subtle" title="Correct">
+                                    ✓ @item.CorrectAnswers
+                                </span>
+                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle" title="Wrong">
+                                    ✗ @item.WrongAnswers
+                                </span>
+                                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle" title="Skipped/Unattempted">
+                                    ○ @item.UnattemptedQuestions
+                                </span>
+                            </td>
+                            <td>
+                                @if (item.IsPassed)
+                                {
+                                    <span class="badge-pass">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                            <polyline points="20 6 9 17 4 12"></polyline>
+                                        </svg>
+                                        Passed
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge-fail">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                                        </svg>
+                                        Failed
+                                    </span>
+                                }
+                            </td>
+                            <td class="text-muted small">
+                                @item.SubmittedUtc.ToString("dd MMM yyyy, HH:mm") UTC
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
