@@ -1,4 +1,4 @@
-using OES.DATA.Authentication;
+﻿using OES.DATA.Authentication;
 using OES.DATA.Examinations;
 using OES.MODELS.Examinations;
 
@@ -85,6 +85,7 @@ public sealed class AttemptService(
         if (attempt.Status == AttemptStatuses.InProgress && utcNow >= attempt.ExpiresUtc)
         {
             await attemptRepository.MarkTimedOutAsync(attempt.Id, utcNow, cancellationToken);
+            await resultService.CalculateAndSaveResultAsync(attempt.Id, cancellationToken);
             attempt = new ExamAttempt
             {
                 Id = attempt.Id,
@@ -156,6 +157,7 @@ public sealed class AttemptService(
             return (false, "The exam attempt could not be submitted.");
         }
 
+        await resultService.CalculateAndSaveResultAsync(attemptId, cancellationToken);
 
         return status == AttemptStatuses.TimedOut
             ? (false, "The exam time expired. Your answers were submitted automatically.")

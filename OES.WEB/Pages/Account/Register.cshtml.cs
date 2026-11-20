@@ -1,12 +1,16 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using OES.MODELS.Authentication;
+using IAuthService = OES.SERVICES.Authentication.IAuthenticationService;
 
 namespace OES.WEB.Pages.Account;
 
+public sealed class RegisterModel(
+    IAuthService authenticationService,
+    IConfiguration configuration) : PageModel
 {
     [BindProperty]
     public RegistrationInput Input { get; set; } = new();
@@ -64,8 +68,12 @@ namespace OES.WEB.Pages.Account;
         [Required, EmailAddress]
         public string Email { get; set; } = string.Empty;
 
+        [Required, StringLength(100, MinimumLength = 8)]
+        [DataType(DataType.Password)]
         public string Password { get; set; } = string.Empty;
 
+        [Required, Compare(nameof(Password), ErrorMessage = "Passwords do not match.")]
+        [DataType(DataType.Password)]
         [Display(Name = "Confirm password")]
         public string ConfirmPassword { get; set; } = string.Empty;
     }

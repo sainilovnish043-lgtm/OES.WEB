@@ -1,6 +1,7 @@
 ﻿@page
 @model IndexModel
 @{
+    ViewData["Title"] = "Online Examination and Result Management";
 }
 
 <!-- Hero Section matching user image -->
@@ -17,34 +18,104 @@
                 {
                     @if (User.IsInRole("Admin"))
                     {
+                        <a asp-page="/Admin/Exams/Index" class="btn btn-pill btn-purple">Manage Examinations</a>
+                        <a asp-page="/Admin/Results/Index" class="btn btn-pill btn-purple-outline">View Results</a>
+                    }
+                    else
+                    {
+                        <a asp-page="/Student/Exams/Index" class="btn btn-pill btn-purple">Available Exams</a>
+                        <a asp-page="/Student/Results/Index" class="btn btn-pill btn-purple-outline">My Results</a>
+                    }
+                }
+                else
+                {
+                    <a asp-page="/Account/Login" class="btn btn-pill btn-purple px-4 py-2">Login</a>
+                    <a asp-page="/Account/Register" class="btn btn-pill btn-purple-outline px-4 py-2">Register</a>
+                }
             </div>
-        <a class="btn btn-primary" asp-page="/Admin/Exams/Index">Manage examinations</a>
         </div>
+        <div class="col-lg-5 d-none d-lg-block text-center">
+            <div class="p-4" style="background: rgba(255, 255, 255, 0.08); border-radius: 1.5rem; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.15);">
+                <div class="mb-3 text-white">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="84" height="84" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="color: #c4b5fd;">
+                        <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"></path>
+                        <path d="M6 6h10"></path>
+                        <path d="M6 10h10"></path>
+                        <path d="m9 16 2 2 4-4"></path>
+                    </svg>
                 </div>
+                <h4 class="text-white fw-bold mb-1">Seamless Digital Testing</h4>
+                <p class="text-white-50 small mb-0">Automated evaluation, real-time timer, and instant result calculation engine.</p>
             </div>
         </div>
-}
-else if (User.IsInRole("Student"))
-{
-    <div class="page-heading">
-        <div>
-            <h1>Welcome back, @User.Identity?.Name</h1>
-            <p>Stay on top of your examinations and results.</p>
     </div>
-        <a class="btn btn-primary" asp-page="/Student/Exams/Index">Browse exams</a>
 </div>
+
+<!-- Key Features Section matching user image -->
+<div class="mb-5">
+    <h2 class="feature-section-title">Key Features</h2>
+    <div class="row g-4">
+        <!-- 1. Online Exams -->
+        <div class="col-md-6 col-lg-3">
+            <div class="feature-card">
+                <div class="feature-icon-wrapper">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                        <line x1="8" y1="21" x2="16" y2="21"></line>
+                        <line x1="12" y1="17" x2="12" y2="21"></line>
+                        <polyline points="7 10 10 13 17 6"></polyline>
+                    </svg>
+                </div>
+                <h3 class="feature-card-title">Online Exams</h3>
+                <p class="feature-card-desc">Conduct secure online exams.</p>
             </div>
-}
-else
-{
-    <div class="card p-5 text-center" style="max-width: 680px; margin: 8vh auto;">
-        <span class="brand-mark mx-auto mb-3">E</span>
-        <h1 class="display-4">ExamDesk</h1>
-        <p class="lead text-muted">A focused online examination and result management portal.</p>
-        <div class="d-flex justify-content-center gap-2 mt-3">
-            <a class="btn btn-primary" asp-page="/Account/Login">Sign in</a>
-            <a class="btn btn-outline-primary" asp-page="/Account/Register">Create an account</a>
+        </div>
+
+        <!-- 2. Result Management -->
+        <div class="col-md-6 col-lg-3">
+            <div class="feature-card">
+                <div class="feature-icon-wrapper">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                </div>
+                <h3 class="feature-card-title">Result Management</h3>
+                <p class="feature-card-desc">View and manage student results.</p>
+            </div>
+        </div>
+
+        <!-- 3. Reports -->
+        <div class="col-md-6 col-lg-3">
+            <div class="feature-card">
+                <div class="feature-icon-wrapper">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                        <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                        <line x1="12" y1="11" x2="12" y2="17"></line>
+                        <line x1="9" y1="14" x2="15" y2="14"></line>
+                    </svg>
+                </div>
+                <h3 class="feature-card-title">Reports</h3>
+                <p class="feature-card-desc">Generate performance and analytics reports.</p>
+            </div>
+        </div>
+
+        <!-- 4. Secure Access -->
+        <div class="col-md-6 col-lg-3">
+            <div class="feature-card">
+                <div class="feature-icon-wrapper">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
+                </div>
+                <h3 class="feature-card-title">Secure Access</h3>
+                <p class="feature-card-desc">Role-based login for students and faculty.</p>
+            </div>
         </div>
     </div>
-}
 </div>

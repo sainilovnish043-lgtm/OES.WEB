@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using OES.MODELS.Examinations;
@@ -7,7 +7,30 @@ using OES.SERVICES.Examinations;
 
 namespace OES.WEB.Pages.Admin;
 
+[Authorize(Policy = "AdminOnly")]
+public sealed class IndexModel(
+    IAuthenticationService authenticationService,
+    IExamService examService,
+    IResultService resultService) : PageModel
 {
+    public int TotalStudents { get; private set; }
+    public int TotalExams { get; private set; }
+    public int PublishedExamsCount { get; private set; }
+    public int DraftExamsCount { get; private set; }
+    public int TotalSubmissions { get; private set; }
+    public int PassedCount { get; private set; }
+    public int FailedCount { get; private set; }
+    public decimal PassRate { get; private set; }
+
+    public IReadOnlyList<ExamWiseResultItem> RecentResults { get; private set; } = [];
+
+    // Chart.js serialized JSON
+    public string ExamLabelsJson { get; private set; } = "[]";
+    public string ExamAvgScoresJson { get; private set; } = "[]";
+    public string ExamPassingScoresJson { get; private set; } = "[]";
+    public string PassFailDataJson { get; private set; } = "[0, 0]";
+
+    public async Task OnGetAsync(CancellationToken cancellationToken)
     {
         var students = await authenticationService.GetStudentsAsync(cancellationToken);
         var exams = await examService.GetAllAsync(cancellationToken);

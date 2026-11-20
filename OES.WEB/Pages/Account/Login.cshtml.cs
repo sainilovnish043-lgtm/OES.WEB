@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -10,6 +10,9 @@ using AuthenticationService = OES.SERVICES.Authentication.IAuthenticationService
 
 namespace OES.WEB.Pages.Account;
 
+public sealed class LoginModel(
+    AuthenticationService authenticationService,
+    IConfiguration configuration) : PageModel
 {
     [BindProperty]
     public LoginInput Input { get; set; } = new();
@@ -17,6 +20,9 @@ namespace OES.WEB.Pages.Account;
     [BindProperty(SupportsGet = true)]
     public string? ReturnUrl { get; set; }
 
+    public void OnGet(string? error = null)
+    {
+        if (!string.IsNullOrWhiteSpace(error))
         {
             ModelState.AddModelError(string.Empty, error);
         }

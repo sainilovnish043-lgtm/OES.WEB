@@ -1,8 +1,18 @@
-@page
+﻿@page
 @model OES.WEB.Pages.Student.ProfileModel
 @{
+    ViewData["Title"] = "Student Profile";
 }
 
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-7">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 fw-bold mb-1">My Student Profile</h1>
+                <p class="text-muted mb-0">Manage your account information and security settings</p>
+            </div>
+            <a asp-page="/Student/Results/Index" class="btn btn-outline-secondary btn-pill btn-sm">My Results</a>
+        </div>
 
         @if (TempData["ProfileMessage"] is string msg)
         {
@@ -15,6 +25,75 @@
         }
         else
         {
+            <!-- Profile Details Card -->
+            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+                <div class="d-flex align-items-center gap-3 mb-4 pb-3 border-bottom">
+                    <div class="portal-brand-icon" style="width: 56px; height: 56px; font-size: 1.5rem; background: linear-gradient(135deg, #7c3aed, #4c1d95);">
+                        @Model.Profile.FullName.Substring(0, Math.Min(1, Model.Profile.FullName.Length)).ToUpperInvariant()
+                    </div>
+                    <div>
+                        <h4 class="fw-bold mb-1">@Model.Profile.FullName</h4>
+                        <span class="badge @(Model.Profile.IsActive ? "bg-success-subtle text-success border border-success-subtle" : "bg-danger-subtle text-danger border border-danger-subtle")">
+                            @(Model.Profile.IsActive ? "Active Student" : "Account Suspended")
+                        </span>
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-sm-6">
+                        <label class="small text-muted fw-semibold">Email Address</label>
+                        <div class="fw-medium">@Model.Profile.Email</div>
+                    </div>
+                    <div class="col-sm-6">
+                        <label class="small text-muted fw-semibold">Student ID</label>
+                        <div class="fw-medium font-monospace">STU-#@Model.Profile.StudentId</div>
+                    </div>
+                    <div class="col-sm-6">
+                        <label class="small text-muted fw-semibold">User Account ID</label>
+                        <div class="fw-medium font-monospace">USR-#@Model.Profile.UserId</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security & 2FA Card -->
+            <div class="card border-0 shadow-sm rounded-4 p-4">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="feature-icon-wrapper m-0" style="width: 48px; height: 48px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                                <path d="m9 12 2 2 4-4"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold mb-1">Two-Factor Authentication (2FA)</h5>
+                            <p class="text-muted small mb-0">Require a 6-digit one-time security code on every sign in</p>
+                        </div>
+                    </div>
+                    <div>
+                        @if (Model.Profile.TwoFactorEnabled)
+                        {
+                            <span class="badge bg-success-subtle text-success border border-success-subtle me-2 px-3 py-2">
+                                ✓ Enabled
+                            </span>
+                            <form method="post" asp-page-handler="ToggleTwoFactor" class="d-inline">
+                                <input type="hidden" name="enable" value="false" />
+                                <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3">Disable</button>
+                            </form>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle me-2 px-3 py-2">
+                                Disabled
+                            </span>
+                            <form method="post" asp-page-handler="ToggleTwoFactor" class="d-inline">
+                                <input type="hidden" name="enable" value="true" />
+                                <button type="submit" class="btn btn-purple btn-sm btn-pill px-3">Enable 2FA</button>
+                            </form>
+                        }
+                    </div>
+                </div>
+            </div>
         }
     </div>
 </div>

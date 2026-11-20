@@ -1,9 +1,20 @@
-@page
+﻿@page
 @model OES.WEB.Pages.Student.Results.IndexModel
-@using OES.MODELS.Examinations
 @{
+    ViewData["Title"] = "My Examination Results";
 }
 
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h1 class="h3 fw-bold mb-1">My Results & Performance</h1>
+        <p class="text-muted mb-0">View your scores, passing status, and detailed answer breakdowns.</p>
+    </div>
+    <div>
+        <a asp-page="/Student/Exams/Index" class="btn btn-purple btn-pill btn-sm">
+            Available Exams
+        </a>
+    </div>
+</div>
 
 <!-- Student Statistics Cards -->
 <div class="row g-3 mb-4">
@@ -73,23 +84,97 @@
     <div class="table-responsive">
         @if (Model.Results.Count == 0)
         {
+            <div class="text-center py-5 text-muted">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="mb-3 text-secondary">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <line x1="9" y1="15" x2="15" y2="15"></line>
+                </svg>
+                <p class="mb-2">You haven't attempted any exams yet.</p>
+                <a asp-page="/Student/Exams/Index" class="btn btn-purple btn-sm">Explore Available Exams</a>
+            </div>
         }
         else
         {
+            <table class="table gridview-table table-hover">
                 <thead>
                     <tr>
+                        <th style="width: 50px;">#</th>
+                        <th>Examination Title</th>
+                        <th>Passing Marks</th>
+                        <th>Marks Obtained</th>
                         <th>Percentage</th>
+                        <th>Breakdown (C / W / S)</th>
+                        <th>Result Status</th>
+                        <th>Submitted Date</th>
                     </tr>
                 </thead>
                 <tbody>
+                    @for (var i = 0; i < Model.Results.Count; i++)
                     {
                         var item = Model.Results[i];
                         <tr>
+                            <td class="text-muted fw-bold">@(i + 1)</td>
+                            <td>
+                                <div class="fw-bold text-dark">@item.ExamTitle</div>
+                                <div class="small text-muted">Attempt #@item.AttemptId</div>
+                            </td>
+                            <td>
+                                <span class="fw-semibold">@item.PassingMarks</span>
+                                <span class="text-muted small">/ @item.TotalMarks</span>
+                            </td>
+                            <td>
+                                <span class="fw-bold fs-6">@item.ObtainedMarks</span>
+                                <span class="text-muted small">/ @item.TotalMarks</span>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="progress flex-grow-1" style="height: 6px; width: 60px;">
+                                        <div class="progress-bar @(item.IsPassed ? "bg-success" : "bg-danger")"
+                                             role="progressbar"
+                                             style="width: @(Math.Min(100, item.Percentage))%;"></div>
+                                    </div>
+                                    <span class="small fw-semibold">@item.Percentage%</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-success-subtle text-success border border-success-subtle" title="Correct">
+                                    ✓ @item.CorrectAnswers
+                                </span>
+                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle" title="Wrong">
+                                    ✗ @item.WrongAnswers
+                                </span>
+                                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle" title="Skipped">
+                                    ○ @item.UnattemptedQuestions
+                                </span>
+                            </td>
+                            <td>
+                                @if (item.IsPassed)
+                                {
+                                    <span class="badge-pass">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                            <polyline points="20 6 9 17 4 12"></polyline>
+                                        </svg>
+                                        Passed
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge-fail">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                                        </svg>
+                                        Failed
+                                    </span>
+                                }
+                            </td>
+                            <td class="text-muted small">
+                                @item.SubmittedUtc.ToString("dd MMM yyyy, HH:mm") UTC
+                            </td>
                         </tr>
                     }
                 </tbody>
             </table>
-	</div>
         }
     </div>
 </div>

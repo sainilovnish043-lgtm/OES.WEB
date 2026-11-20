@@ -1,4 +1,4 @@
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using BCrypt.Net;
 using OES.DATA.Authentication;
 using OES.MODELS.Authentication;
@@ -97,6 +97,8 @@ public sealed class AuthenticationService(IUserRepository userRepository) : IAut
                 StudentId = student.Id,
                 FullName = student.FullName,
                 Email = student.Email,
+                IsActive = student.IsActive,
+                TwoFactorEnabled = user?.TwoFactorEnabled ?? true
             };
     }
 

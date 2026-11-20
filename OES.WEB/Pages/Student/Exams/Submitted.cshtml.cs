@@ -1,4 +1,4 @@
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -10,11 +10,16 @@ using OES.SERVICES.Examinations;
 namespace OES.WEB.Pages.Student.Exams;
 
 [Authorize(Policy = "StudentOnly")]
+public sealed class SubmittedModel(
+    IResultService resultService,
+    IExamService examService,
+    IAiService aiService) : PageModel
 {
     public string Status { get; private set; } = AttemptStatuses.Submitted;
     public ExamResult? Result { get; private set; }
     public AiStudyRecommendation? AiRecommendation { get; private set; }
 
+    public async Task<IActionResult> OnGetAsync(int? attemptId, string? status, CancellationToken cancellationToken)
     {
         Status = status is AttemptStatuses.TimedOut ? AttemptStatuses.TimedOut : AttemptStatuses.Submitted;
 

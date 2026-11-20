@@ -1,4 +1,4 @@
-using Dapper;
+﻿using Dapper;
 using OES.DATA.Database;
 using OES.MODELS.Examinations;
 
@@ -30,22 +30,28 @@ public sealed class AttemptRepository(ISqlConnectionFactory connectionFactory) :
             sql, new { ExamId = examId, StudentId = studentId }, cancellationToken: cancellationToken));
     }
 
+    public async Task<ExamAttempt?> GetByIdAsync(int attemptId, CancellationToken cancellationToken = default)
     {
         const string sql = """
             SELECT Id, ExamId, StudentId, StartedUtc, ExpiresUtc, SubmittedUtc, Status
             FROM dbo.ExamAttempts
+            WHERE Id = @AttemptId;
             """;
         using var connection = connectionFactory.CreateConnection();
         return await connection.QuerySingleOrDefaultAsync<ExamAttempt>(new CommandDefinition(
+            sql, new { AttemptId = attemptId }, cancellationToken: cancellationToken));
     }
 
+    public async Task<ExamAttempt?> GetByIdForStudentAsync(int attemptId, int studentId, CancellationToken cancellationToken = default)
     {
         const string sql = """
             SELECT Id, ExamId, StudentId, StartedUtc, ExpiresUtc, SubmittedUtc, Status
             FROM dbo.ExamAttempts
+            WHERE Id = @AttemptId AND StudentId = @StudentId;
             """;
         using var connection = connectionFactory.CreateConnection();
         return await connection.QuerySingleOrDefaultAsync<ExamAttempt>(new CommandDefinition(
+            sql, new { AttemptId = attemptId, StudentId = studentId }, cancellationToken: cancellationToken));
     }
 
     public async Task<IReadOnlyList<StudentAnswer>> GetAnswersAsync(int attemptId, CancellationToken cancellationToken = default)

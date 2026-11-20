@@ -1,4 +1,4 @@
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -50,6 +50,7 @@ public sealed class AttemptModel(IAttemptService attemptService) : PageModel
 
         if (Session.Attempt.Status != AttemptStatuses.InProgress)
         {
+            return RedirectToPage("Submitted", new { attemptId, status = Session.Attempt.Status });
         }
 
         var result = await attemptService.SubmitAsync(
@@ -65,10 +66,12 @@ public sealed class AttemptModel(IAttemptService attemptService) : PageModel
 
         if (result.Succeeded)
         {
+            return RedirectToPage("Submitted", new { attemptId, status = AttemptStatuses.Submitted });
         }
 
         if (result.Error?.StartsWith("The exam time expired", StringComparison.Ordinal) == true)
         {
+            return RedirectToPage("Submitted", new { attemptId, status = AttemptStatuses.TimedOut });
         }
 
         ModelState.AddModelError(string.Empty, result.Error ?? "The exam could not be submitted.");

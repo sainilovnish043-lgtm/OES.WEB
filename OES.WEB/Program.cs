@@ -1,4 +1,9 @@
+﻿using System.Text;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.Google;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.IdentityModel.Tokens;
 using OES.DATA.Authentication;
 using OES.DATA.Database;
 using OES.DATA.Examinations;
@@ -13,31 +18,27 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
+
+var jwtSecretKey = builder.Configuration["Jwt:SecretKey"];
+if (string.IsNullOrWhiteSpace(jwtSecretKey) || jwtSecretKey.Length < 32)
 {
+    throw new InvalidOperationException("Jwt:SecretKey must be configured with at least 32 characters.");
+}
+var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "OES.WEB";
+var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "OES.Clients";
+
+builder.Services.AddAuthentication(options =>
     {
-    {
-    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
-    options.AddPolicy("global", context => RateLimitPartition.GetFixedWindowLimiter(
-        context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
-        _ => new FixedWindowRateLimiterOptions
-        {
-            PermitLimit = 120,
-            Window = TimeSpan.FromMinutes(1),
-            QueueLimit = 0,
-            AutoReplenishment = true
-        }));
-});
-builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-    .AddCookie(options =>
+        options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+        options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+        options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+    })
+    .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
     {
         options.LoginPath = "/Account/Login";
         options.LogoutPath = "/Account/Logout";
         options.AccessDeniedPath = "/Account/AccessDenied";
-        options.Cookie.Name = "OES.Auth";
-        options.Cookie.HttpOnly = true;
-        options.Cookie.IsEssential = true;
-        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-        options.Cookie.SameSite = SameSiteMode.Lax;
         options.SlidingExpiration = true;
         options.ExpireTimeSpan = TimeSpan.FromHours(8);
     })
@@ -52,12 +53,12 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     .AddGoogle(GoogleDefaults.AuthenticationScheme, options =>
     {
         options.SignInScheme = "ExternalCookie";
-        options.ClientId = builder.Configuration["Authentication:Google:ClientId"]
-            ?? builder.Configuration["web:client_id"]
-            ?? string.Empty;
-        options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"]
-            ?? builder.Configuration["web:client_secret"]
-            ?? string.Empty;
+        var googleClientId = builder.Configuration["Authentication:Google:ClientId"]
+            ?? builder.Configuration["web:client_id"];
+        var googleClientSecret = builder.Configuration["Authentication:Google:ClientSecret"]
+            ?? builder.Configuration["web:client_secret"];
+        options.ClientId = string.IsNullOrWhiteSpace(googleClientId) ? "placeholder-google-client-id" : googleClientId;
+        options.ClientSecret = string.IsNullOrWhiteSpace(googleClientSecret) ? "placeholder-google-client-secret" : googleClientSecret;
     })
     .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
     {
@@ -92,8 +93,6 @@ builder.Services.AddScoped<IExamRepository, ExamRepository>();
 builder.Services.AddScoped<IExamService, ExamService>();
 builder.Services.AddScoped<IQuestionRepository, QuestionRepository>();
 builder.Services.AddScoped<IQuestionService, QuestionService>();
-builder.Services.AddScoped<IAttemptRepository, AttemptRepository>();
-builder.Services.AddScoped<IAttemptService, AttemptService>();
 builder.Services.AddScoped<IResultRepository, ResultRepository>();
 builder.Services.AddScoped<IResultService, ResultService>();
 builder.Services.AddScoped<IAttemptRepository, AttemptRepository>();
@@ -125,27 +124,14 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseHttpLogging();
 
 app.UseRouting();
 
-app.Use(async (context, next) =>
-{
-    context.Response.Headers["X-Content-Type-Options"] = "nosniff";
-    context.Response.Headers["X-Frame-Options"] = "DENY";
-    context.Response.Headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
-    context.Response.Headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()";
-    await next();
-});
-
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseRateLimiter();
 
 app.MapStaticAssets();
-app.MapHealthChecks("/health").AllowAnonymous();
 app.MapRazorPages()
-   .RequireRateLimiting("global")
    .WithStaticAssets();
 
 using (var scope = app.Services.CreateScope())

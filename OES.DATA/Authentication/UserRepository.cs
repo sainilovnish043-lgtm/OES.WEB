@@ -1,4 +1,4 @@
-using Dapper;
+﻿using Dapper;
 using OES.DATA.Database;
 using OES.MODELS.Authentication;
 
@@ -9,6 +9,7 @@ public sealed class UserRepository(ISqlConnectionFactory connectionFactory) : IU
     public async Task<User?> FindByEmailAsync(string email, CancellationToken cancellationToken = default)
     {
         const string sql = """
+            SELECT Id, Email, PasswordHash, Role, IsActive, TwoFactorEnabled
             FROM dbo.Users
             WHERE Email = @Email;
             """;
@@ -34,12 +35,25 @@ public sealed class UserRepository(ISqlConnectionFactory connectionFactory) : IU
     public async Task<Student?> FindStudentByUserIdAsync(int userId, CancellationToken cancellationToken = default)
     {
         const string sql = """
+            SELECT s.Id, s.UserId, s.FullName, u.Email, u.IsActive, u.TwoFactorEnabled, s.CreatedUtc
             FROM dbo.Students AS s
             INNER JOIN dbo.Users AS u ON u.Id = s.UserId
             WHERE s.UserId = @UserId;
             """;
 
         using var connection = connectionFactory.CreateConnection();
+        return await connection.QuerySingleOrDefaultAsync<StudentProfile>(
+            new CommandDefinition(sql, new { UserId = userId }, cancellationToken: cancellationToken)) is { } profile
+            ? new Student
+            {
+                Id = profile.StudentId,
+                UserId = profile.UserId,
+                FullName = profile.FullName,
+                Email = profile.Email,
+                IsActive = profile.IsActive,
+                CreatedUtc = DateTime.UtcNow
+            }
+            : null;
     }
 
     public async Task<IReadOnlyList<Student>> GetStudentsAsync(CancellationToken cancellationToken = default)
@@ -68,7 +82,9 @@ public sealed class UserRepository(ISqlConnectionFactory connectionFactory) : IU
     public async Task<int> CreateStudentAsync(string email, string passwordHash, string fullName, CancellationToken cancellationToken = default)
     {
         const string userSql = """
+            INSERT INTO dbo.Users (Email, PasswordHash, Role, IsActive, TwoFactorEnabled)
             OUTPUT INSERTED.Id
+            VALUES (@Email, @PasswordHash, N'Student', 1, 1);
             """;
         const string studentSql = """
             INSERT INTO dbo.Students (UserId, FullName)
